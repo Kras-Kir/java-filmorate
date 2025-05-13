@@ -39,6 +39,12 @@ public class FilmController {
         return film;
     }
 
+    @GetMapping
+    public Collection<Film> getAllFilms() {
+        log.info("Получен запрос GET /films");
+        return films.values();
+    }
+
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             String errorMsg = "Название фильма не может быть пустым";

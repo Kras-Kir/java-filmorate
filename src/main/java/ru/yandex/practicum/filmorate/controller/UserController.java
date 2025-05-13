@@ -42,6 +42,12 @@ public class UserController {
         return user;
     }
 
+    @GetMapping
+    public Collection<User> getAllUsers() {
+        log.info("Получен запрос GET /users");
+        return users.values();
+    }
+
     private void validateUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
             String errorMsg = "Электронная почта не может быть пустой и должна содержать @";
