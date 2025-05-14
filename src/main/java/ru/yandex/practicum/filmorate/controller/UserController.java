@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import org.springframework.web.bind.annotation.*;
@@ -18,10 +19,7 @@ public class UserController {
     public User createUser(@RequestBody User user) {
         log.info("Получен запрос POST /users - {}", user);
         validateUser(user);
-        if (user.getName() == null || user.getName().isBlank()) {
-            log.debug("Имя пользователя пустое, используем логин: {}", user.getLogin());
-            user.setName(user.getLogin());
-        }
+        processUserName(user);
         user.setId(idCounter++);
         users.put(user.getId(), user);
         log.info("Создан новый пользователь: {}", user);
@@ -35,8 +33,9 @@ public class UserController {
         if (!users.containsKey(user.getId())) {
             String errorMsg = "Пользователь с ID " + user.getId() + " не найден";
             log.error(errorMsg);
-            throw new ValidationException(errorMsg);
+            throw new NotFoundException(errorMsg);
         }
+        processUserName(user);
         users.put(user.getId(), user);
         log.info("Обновлен пользователь: {}", user);
         return user;
@@ -46,6 +45,13 @@ public class UserController {
     public Collection<User> getAllUsers() {
         log.info("Получен запрос GET /users");
         return users.values();
+    }
+
+    private void processUserName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            log.debug("Имя пользователя пустое, используем логин: {}", user.getLogin());
+            user.setName(user.getLogin());
+        }
     }
 
     private void validateUser(User user) {
@@ -59,9 +65,14 @@ public class UserController {
             log.warn(errorMsg + " - {}", user);
             throw new ValidationException(errorMsg);
         }
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
+        if (user.getBirthday() == null) {
+            String errorMsg = "Дата рождения обязательна";
+            log.warn("Ошибка валидации пользователя: {}", errorMsg);
+            throw new ValidationException(errorMsg);
+        }
+        if (user.getBirthday().isAfter(LocalDate.now())) {
             String errorMsg = "Дата рождения не может быть в будущем";
-            log.warn(errorMsg + " - {}", user);
+            log.warn("Ошибка валидации пользователя: {}", errorMsg);
             throw new ValidationException(errorMsg);
         }
     }
