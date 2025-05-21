@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -17,12 +17,10 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
-    private final UserStorage userStorage;
 
     @Autowired
-    public UserController(UserService userService, UserStorage userStorage) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.userStorage = userStorage;
     }
 
     @PostMapping
@@ -30,7 +28,7 @@ public class UserController {
         log.info("Получен запрос POST /users - {}", user);
         validateUser(user);
         processUserName(user);
-        User createdUser = userStorage.createUser(user);
+        User createdUser = userService.createUser(user);
         log.info("Создан новый пользователь: {}", createdUser);
         return createdUser;
     }
@@ -40,7 +38,7 @@ public class UserController {
         log.info("Получен запрос PUT /users - {}", user);
         validateUser(user);
         processUserName(user);
-        User updatedUser = userStorage.updateUser(user);
+        User updatedUser = userService.updateUser(user);
         log.info("Обновлен пользователь: {}", updatedUser);
         return updatedUser;
     }
@@ -48,7 +46,7 @@ public class UserController {
     @GetMapping
     public Collection<User> getAllUsers() {
         log.info("Получен запрос GET /users");
-        return userStorage.getAllUsers();
+        return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")

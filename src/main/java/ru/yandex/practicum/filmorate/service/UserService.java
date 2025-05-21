@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,10 +55,23 @@ public class UserService {
 
 
     public User getUserById(long id) {
-        return userStorage.getAllUsers().stream()
-                .filter(u -> u.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + id + " не найден"));
+        User user = userStorage.getUserById(id);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с ID " + id + " не найден");
+        }
+        return user;
+    }
+
+    public User createUser(User user) {
+        return userStorage.createUser(user);
+    }
+
+    public User updateUser(User user) {
+        return userStorage.updateUser(user);
+    }
+
+    public Collection<User> getAllUsers() {
+        return userStorage.getAllUsers();
     }
 
 

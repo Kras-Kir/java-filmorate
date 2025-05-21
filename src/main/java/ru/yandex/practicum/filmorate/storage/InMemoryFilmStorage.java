@@ -11,8 +11,8 @@ import java.util.Map;
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
 
-    private final Map<Integer, Film> films = new HashMap<>();
-    private int idCounter = 1;
+    private final Map<Long, Film> films = new HashMap<>();
+    private Long idCounter = 1L;
 
     @Override
     public Film createFilm(Film film) {
@@ -42,9 +42,10 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film getFilmById(long id) {
-        return films.values().stream()
-                .filter(f -> f.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Фильм с ID " + id + " не найден"));
+        Film film = films.get(id);
+        if (film == null) {
+            throw new NotFoundException("Фильм с ID " + id + " не найден");
+        }
+        return film;
     }
 }
