@@ -1,3 +1,4 @@
+<!-- -*- coding: utf-8 -*- -->
 # java-filmorate
 Template repository for Filmorate project.
 ![ER-diagram](ERfilmorate.png)
