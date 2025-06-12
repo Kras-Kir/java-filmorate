@@ -6,11 +6,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-public class Film {
+public class User {
     private Long id;
+    private String email;
+    private String login;
     private String name;
-    private String description;
-    private LocalDate releaseDate;
-    private int duration;
-    private final Set<Long> likes = new HashSet<>();
+    private LocalDate birthday;
+    private final Set<Long> friends = new HashSet<>();
 }
