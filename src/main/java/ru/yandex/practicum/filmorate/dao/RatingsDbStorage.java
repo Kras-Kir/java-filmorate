@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Ratings;
 import ru.yandex.practicum.filmorate.storage.RatingsStorage;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;

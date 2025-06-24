@@ -50,20 +50,20 @@ public class FilmService {
         return ratingsStorage.getAllRatings();
     }
 
-   public Ratings getRatingById(int id) {
-       return ratingsStorage.getRatingById(id)
-               .orElseThrow(() -> new NotFoundException("Рейтинг с ID " + id + " не найден"));
-   }
+    public Ratings getRatingById(int id) {
+        return ratingsStorage.getRatingById(id)
+                .orElseThrow(() -> new NotFoundException("Рейтинг с ID " + id + " не найден"));
+    }
 
-   public Film createFilm(Film film) {
-       validateFilm(film);
-       validateMpaExists(film.getMpa());
-       validateGenresExist(film.getGenres());
+    public Film createFilm(Film film) {
+        validateFilm(film);
+        validateMpaExists(film.getMpa());
+        validateGenresExist(film.getGenres());
 
-       Film createdFilm = filmStorage.createFilm(film);
-       updateFilmGenres(createdFilm.getId(), film.getGenres());
-       return getFilmById(createdFilm.getId());
-   }
+        Film createdFilm = filmStorage.createFilm(film);
+        updateFilmGenres(createdFilm.getId(), film.getGenres());
+        return getFilmById(createdFilm.getId());
+    }
 
     public Film updateFilm(Film film) {
         getFilmOrThrow(film.getId()); // Проверяем существование фильма
@@ -105,7 +105,7 @@ public class FilmService {
     private void validateMpaExists(Ratings mpa) {
         if (mpa != null) {
             ratingsStorage.getRatingById(mpa.getId())
-                    .orElseThrow(() -> new NotFoundException ("MPA рейтинг с ID " + mpa.getId() + " не найден"));
+                    .orElseThrow(() -> new NotFoundException("MPA рейтинг с ID " + mpa.getId() + " не найден"));
         }
     }
 

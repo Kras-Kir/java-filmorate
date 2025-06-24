@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface RatingsStorage {
     List<Ratings> getAllRatings();
+
     Optional<Ratings> getRatingById(int id);
+
     Ratings getFilmRating(long filmId);
 }
