@@ -1,52 +1,59 @@
 package ru.yandex.practicum.filmorate;
 
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({UserDbStorage.class, UserService.class})
-class FilmorateApplicationTests {
+@Import(UserDbStorage.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+class FilmorateApplicationTests  {
 
     @Autowired
-    private UserDbStorage userStorage;
+    private UserStorage userStorage;
 
-    @Autowired
-    private UserService userService;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
-        // Очистка базы перед каждым тестом
-        userStorage.getAllUsers().forEach(user -> userStorage.deleteUser(user.getId()));
-    }
-
-    @Test
-    void contextLoads() {
-        assertNotNull(userStorage);
-        assertNotNull(userService);
-    }
-
-    @Test
-    void testCreateUser() {
-        User user = User.builder()
-                .email("test@mail.com")
+        testUser = User.builder()
+                .email("test@example.com")
                 .login("testLogin")
+                .name("Test Name")
+                .birthday(LocalDate.of(1990, 1, 1))
                 .build();
-
-        User created = userService.createUser(user);
-        assertNotNull(created.getId());
-        assertEquals(user.getEmail(), created.getEmail());
     }
-}
+
+    @Test
+    void shouldCreateAndGetUserById() {
+        User createdUser = userStorage.createUser(testUser);
+        Optional<User> userOptional = userStorage.getUserById(createdUser.getId());
+
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user -> {
+                    assertThat(user.getId()).isEqualTo(createdUser.getId());
+                    assertThat(user.getEmail()).isEqualTo("test@example.com");
+                    assertThat(user.getLogin()).isEqualTo("testLogin");
+                    assertThat(user.getName()).isEqualTo("Test Name");
+                    assertThat(user.getBirthday()).isEqualTo(LocalDate.of(1990, 1, 1));
+                });
+    }
+
+   }
