@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -8,65 +10,60 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 @Service
 public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
     public void addFriend(long userId, long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
+        checkUserExists(userId);
+        checkUserExists(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        if (userId == friendId) {
+            throw new IllegalArgumentException("Пользователь не может добавить самого себя в друзья");
+        }
+
+        userStorage.addFriend(userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
+        checkUserExists(userId);
+        checkUserExists(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        userStorage.removeFriend(userId, friendId);
     }
 
     public List<User> getFriends(long userId) {
-        User user = getUserById(userId);
-        return user.getFriends().stream()
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        checkUserExists(userId);
+        return userStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(long userId, long otherUserId) {
-        User user = getUserById(userId);
-        User otherUser = getUserById(otherUserId);
+        checkUserExists(userId);
+        checkUserExists(otherUserId);
 
-        return user.getFriends().stream()
-                .filter(otherUser.getFriends()::contains)
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        return userStorage.getCommonFriends(userId, otherUserId);
     }
 
-
     public User getUserById(long id) {
-        User user = userStorage.getUserById(id);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с ID " + id + " не найден");
-        }
-        return user;
+        return userStorage.getUserById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + id + " не найден"));
     }
 
     public User createUser(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         return userStorage.createUser(user);
     }
 
     public User updateUser(User user) {
+        checkUserExists(user.getId());
         return userStorage.updateUser(user);
     }
 
@@ -74,5 +71,9 @@ public class UserService {
         return userStorage.getAllUsers();
     }
 
-
+    private void checkUserExists(long userId) {
+        if (!userStorage.getUserById(userId).isPresent()) {
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
+        }
+    }
 }
