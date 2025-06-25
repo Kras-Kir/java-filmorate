@@ -24,25 +24,26 @@ import java.util.Optional;
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final GenreStorage genreStorage;
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate, GenreStorage genreStorage) {
         this.jdbcTemplate = jdbcTemplate;
-        this.genreStorage = genreStorage;
     }
 
     @Override
     public List<Film> getAllFilms() {
         String sql = "SELECT f.*, r.name as rating_name FROM film f LEFT JOIN ratings r ON f.rating_id = r.rating_id";
-        return jdbcTemplate.query(sql, this::mapRowToFilm);
+        return jdbcTemplate.query(sql, this::mapRowToFilmWithoutGenres);
     }
 
     @Override
     public Optional<Film> getFilmById(long id) {
-        String sql = "SELECT f.*, r.name as rating_name FROM film f LEFT JOIN ratings r ON f.rating_id = r.rating_id WHERE f.id = ?";
+        String sql = "SELECT f.*, r.name as rating_name " +
+                "FROM film f " +
+                "LEFT JOIN ratings r ON f.rating_id = r.rating_id " +
+                "WHERE f.id = ?";
         try {
-            return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapRowToFilm, id));
+            return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapRowToFilmWithoutGenres, id));
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -106,11 +107,11 @@ public class FilmDbStorage implements FilmStorage {
                 "GROUP BY f.id " +
                 "ORDER BY COUNT(l.user_id) DESC " +
                 "LIMIT ?";
-        return jdbcTemplate.query(sql, this::mapRowToFilm, count);
+        return jdbcTemplate.query(sql, this::mapRowToFilmWithoutGenres, count);
     }
 
-    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
-        Film film = Film.builder()
+    private Film mapRowToFilmWithoutGenres(ResultSet rs, int rowNum) throws SQLException {
+        return Film.builder()
                 .id(rs.getLong("id"))
                 .name(rs.getString("name"))
                 .description(rs.getString("description"))
@@ -118,9 +119,6 @@ public class FilmDbStorage implements FilmStorage {
                 .duration(rs.getInt("duration"))
                 .mpa(new Ratings(rs.getInt("rating_id"), rs.getString("rating_name")))
                 .build();
-
-        // Загружаем жанры для фильма
-        film.setGenres(genreStorage.getFilmGenres(film.getId()));
-        return film;
     }
+
 }

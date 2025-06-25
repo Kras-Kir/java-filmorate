@@ -16,7 +16,10 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
@@ -120,11 +123,14 @@ public class FilmService {
     }
 
     public Collection<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
+        List<Film> films = filmStorage.getAllFilms();
+        return enrichFilmsWithGenres(films);
     }
 
     public Film getFilmById(long id) {
-        return getFilmOrThrow(id);
+        Film film = getFilmOrThrow(id);
+        film.setGenres(genreStorage.getFilmGenres(film.getId()));
+        return film;
     }
 
     public void addLike(long filmId, long userId) {
@@ -142,7 +148,8 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(int count) {
-        return filmStorage.getPopularFilms(count);
+        List<Film> films = filmStorage.getPopularFilms(count);
+        return enrichFilmsWithGenres(films);
     }
 
     private Film getFilmOrThrow(long filmId) {
@@ -153,5 +160,23 @@ public class FilmService {
     private void checkUserExists(long userId) {
         userStorage.getUserById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+    }
+
+    private List<Film> enrichFilmsWithGenres(List<Film> films) {
+        if (films.isEmpty()) {
+            return films;
+        }
+
+        List<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, List<Genre>> genresByFilmId = genreStorage.getGenresForFilms(filmIds);
+
+        films.forEach(film ->
+                film.setGenres(genresByFilmId.getOrDefault(film.getId(), Collections.emptyList()))
+        );
+
+        return films;
     }
 }
